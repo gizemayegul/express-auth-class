@@ -48,4 +48,35 @@ router.get("/userProfile", (req, res) => {
   res.render("users/user-profile");
 });
 
+router.get("/login", (req, res) => {
+  res.render("auth/login");
+});
+
+router.post("/login", async (req, res) => {
+  console.log("SESSION =====> ", req.session);
+  const { email, password } = req.body;
+  if (email === "" || password === "") {
+    res.render("/auth/login", {
+      errorMessage: "please enter both",
+    });
+    return;
+  }
+  try {
+    const findEmail = await User.findOne({ email });
+    const { password: hashedPassword } = findEmail;
+    console.log(hashedPassword);
+    if (!findEmail) {
+      console.log("the email is not registered");
+      res.render("user/user-profile", { errorMessage: "User not found" });
+    } else if (bcryptjs.compare(password, hashedPassword)) {
+      res.render("users/user-profile", { user: findEmail });
+    } else {
+      console.log("incorrect password");
+      res.render("auth/login", { errorMessage: "User nto ound" });
+    }
+  } catch (error) {
+    next(error);
+  }
+});
+
 module.exports = router;
